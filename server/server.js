@@ -6,11 +6,11 @@ const cookieParser = require('cookie-parser');
 var request = require('request'); // "Request" library
 var querystring = require('querystring');
 var SpotifyWebApi = require('spotify-web-api-node');
+const apiRouter = express.Router();
 
 const client_id = '5356996e785f460699c8ed4c018ba20c';
 const client_secret ='4e26d125ead54020952777d45cb99594';
 const redirect_uri = 'http://localhost:8080/callback';
-const TOKEN = 'https://acounts.spotify.com/api/token';
 
 let spotifyApi = new SpotifyWebApi({
   clientId: client_id,
@@ -21,6 +21,7 @@ let spotifyApi = new SpotifyWebApi({
 //  app.use(express.static(__dirname + '/public'))
 app.use(cors());
 app.use(cookieParser());
+app.use('*', apiRouter);
 
 var generateRandomString = function(length) {
   var text = '';
@@ -152,15 +153,39 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-app.get('/playlists', async(req, res) => {
+app.get('/playlists', async(req, res, next) => {
   try {
     let result = await spotifyApi.getUserPlaylists();
+    //
+    return next();
     console.log('BODY', result.body);
     res.status(200).send(result.body);
   } catch (err) {
     res.status(400).send(err);
   }
 })
+
+app.get('/playlists', async(req, res, next) => {
+  try {
+    console.log('HERE');
+    res.locals.test = 'TEST';
+    await window.localStorage.setItem('test', 'value');
+    console.log('HERE2');
+    res.status(200).json({'SECOND': 'works'});
+  } catch (err) {
+    res.status(400).send(err);
+  }
+})
+
+app.get('/', async(req, res, next) => {
+  try {
+    console.log('REDIRECTED');
+    return next();
+  } catch (err) {
+    res.status(400).send(err);
+  }
+})
+
 
 app.get('/onePlaylist', async(req, res) => {
   try {
@@ -172,18 +197,44 @@ app.get('/onePlaylist', async(req, res) => {
 
     for (let song of songs) {
       songNames.push(song.track.name);
-      songIds[song.track.name] = song.track.id;
+      songIds[song.track.id] = song.track.name
       songPopularity[song.track.id] = song.track.popularity
     }
+    const sortedByPopularity = Object.fromEntries(
+      Object.entries(songPopularity).sort(([,a],[,b]) => b-a)
+    ); // will be 'id':popularity
+    const sortedSongs = {}; // will be 'id': 'song name'
+    const songArt = {}; // will be 'song name': '300height art url'
+    for (let key in sortedByPopularity) {
+      sortedSongs[key] = songIds[key];
+      
+      for (let song of songs) {
+        if (song.track.id === key) {
+          songArt[songIds[key]] = song.track.album.images[1].url;
+        }
+      }
+    }
+    res.locals.onePlaylist = {
+      sortedSongs: sortedSongs,
+      sortedByPopularity: sortedByPopularity,
+      songArt: songArt,
+      response: result.body
+    }
     res.status(200).json({
-      songIds: songIds,
-      songPopularity: songPopularity
-    })
-
+      sortedSongs: sortedSongs,
+      sortedByPopularity: sortedByPopularity,
+      songArt: songArt,
+      response: result.body
+    });
+    
   } catch (err) {
     res.status(400).send(err);
   }
 })
+
+async function sortOnePlaylist() {
+ 
+}
 
 app.get('/usersTopTracks', async(req, res) => {
   try {
@@ -202,6 +253,11 @@ app.get('/usersTopTracks', async(req, res) => {
   }
 })
 
+app.get('/', (req, res) => {
+  console.log('REACHED / ROUTE');
+  console.log('ONEPLAYLIST: ', res.locals.onePlaylist);
+})
+
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the build folder on the route '/build'
   app.use('/build', express.static(path.join(__dirname, '../build')));
@@ -212,3 +268,4 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.listen(3000); //listens on port 3000 -> http://localhost:3000/
+module.exports = apiRouter;

@@ -31,6 +31,22 @@ function handleRedirect() {
   localStorage.setItem('access_token', accessToken);
   localStorage.setItem('refresh_token', refreshToken);
 
+  fetch('/onePlaylist')
+    .then(result => result.json())
+    .then(result => {
+      console.log('RESULT', result);
+      console.log('SONGART', result.songArt);
+      let songArt = result.songArt;
+      displayArt(songArt);
+    })
+  console.log('FETCH DONE');
+}
+
+function displayArt(songArt) {
+  console.log('displayArt reached!');
+  let arrSongArt = Object.entries(songArt);
+  console.log(arrSongArt);
+  localStorage.setItem('songArt', JSON.stringify(arrSongArt));
 }
 
 function getTokens() {
@@ -54,7 +70,7 @@ function reset() {
       ['', '', ''],
       ['', '', ''],
     ],
-    turn: 'X',
+    turn: 'Playlist',
     winner: undefined,
     gameList: gameStore,
   };
@@ -120,9 +136,11 @@ class App extends Component {
     const { rows, turn, winner, gameList } = this.state;
     const handleClick = this.handleClick;
 
+    const songArt = JSON.parse(localStorage.getItem('songArt'));
+
 
     const rowElements = rows.map((letters, i) => (
-      <Row key={i} row={i} letters={letters} handleClick={handleClick} />
+      <Row key={i} row={i} letters={letters} handleClick={handleClick} artUrl={[songArt[i*3][1], songArt[i*3 + 1][1], songArt[i*3 + 2][1],]} />
     ));
 
     let infoDiv;
@@ -134,7 +152,7 @@ class App extends Component {
         </div>
       );
     } else {
-      infoDiv = <div>Turn: {turn}</div>;
+      infoDiv = <div>Playlist: {turn}</div>;
     }
 
     return (
@@ -148,7 +166,6 @@ class App extends Component {
         <button id="playlists" onClick={() => callApi()}>Get Playlists!</button>
         <button id="oneplaylist" onClick={() => onePlaylist()}>Get Data on One Playlist!</button>
         <button id="topTracks" onClick={() => topTracks()}>Get Data on my Top Tracks!</button>
-        {/* <Leaders /> */}
       </div>
     );
   }

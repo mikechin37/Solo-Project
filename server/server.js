@@ -220,12 +220,15 @@ app.get('/onePlaylist', async(req, res) => {
       songArt: songArt,
       response: result.body
     }
-    res.status(200).json({
+    const myObj = {
+      playlistName: result.name,
       sortedSongs: sortedSongs,
       sortedByPopularity: sortedByPopularity,
       songArt: songArt,
       response: result.body
-    });
+    };
+    // how to fetch data from backend to React
+    return res.status(200).json(myObj);
     
   } catch (err) {
     res.status(400).send(err);
@@ -251,11 +254,6 @@ app.get('/usersTopTracks', async(req, res) => {
   } catch (err) {
     res.status(400).send(err);
   }
-})
-
-app.get('/', (req, res) => {
-  console.log('REACHED / ROUTE');
-  console.log('ONEPLAYLIST: ', res.locals.onePlaylist);
 })
 
 if (process.env.NODE_ENV === 'production') {

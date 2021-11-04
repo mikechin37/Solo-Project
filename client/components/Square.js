@@ -2,10 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const Square = (props) => {
-  const { handleClick, letter, row, square } = props;
+  const { handleClick, letter, row, square, artUrl } = props;
 
   return (
-    <div className="square" onClick={() => {handleClick(row, square)}}>{letter}</div>
+    <div className="square" onClick={() => {handleClick(row, square)}}>
+      <img src = {artUrl}/>
+      {letter}
+    </div>
   );
 };
 

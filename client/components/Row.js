@@ -3,9 +3,9 @@ import Square from './Square';
 import PropTypes from 'prop-types';
 
 const Row = (props) => {
-  const { letters, handleClick, row } = props;
+  const { letters, handleClick, row, artUrl } = props;
   const squareElements = letters.map((letter, i) => (
-    <Square key={row + i} row={row} square={i} letter={letter} handleClick={handleClick} />
+    <Square key={row + i} row={row} square={i} letter={letter} handleClick={handleClick} artUrl={artUrl[i]} />
   ));
   return (
     <div className="row">

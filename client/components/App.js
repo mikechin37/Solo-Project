@@ -6,28 +6,25 @@ let gameStore = [];
 
 function getAuth() {
   console.log('Reached function getAuth')
-  window.location.href = 'http://localhost:8080/redirectSpotify';
-}
-
-function handleRedirect() {
-  console.log('Reached handleRedirect')
-  let code = getCode();
-  // localStorage.setItem('code', code);
-  fetchAccessToken(code);
+  window.location.href = 'http://localhost:8080/login';
 }
 
 function fetchAccessToken(code) {
   window.location.href = `http://localhost:8080/getAccessToken?code=${code}`;
 }
 
-function getCode() {
+function getAccessToken() {
   const queryString = window.location.search;
-  let code = null;
+  let accessToken = null;
+  let refreshToken = null;
   if (queryString.length > 0) {
-    code = new URLSearchParams(queryString).get('code');
-    console.log('GRABBED CODE!', code)
+    accessToken = new URLSearchParams(queryString).get('access_token');
+    refreshToken = new URLSearchParams(queryString).get('refresh_token');
+
+    console.log('GRABBED ACCESSTOKEN: ', accessToken);
+    console.log('GRABBED REFRESHTOKEN: ', refreshToken);
   }
-  return code;
+  return accessToken;
 }
 
 function reset() {
@@ -75,7 +72,7 @@ class App extends Component {
   }
   componentDidMount() {
     if (window.location.search.length > 0) {
-      handleRedirect();
+      getAccessToken();
     }
   }
   handleClick(row, square) {

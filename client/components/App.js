@@ -1,16 +1,14 @@
 import React, { Component } from 'react';
 import Row from './Row';
-let localStorage = window.localStorage;
-
-let gameStore = [];
+let sessionStorage = window.sessionStorage;
 
 function getAuth() {
   console.log('Reached function getAuth');
   window.location.href = 'http://localhost:8080/login';
 }
 
-function callApi() {
-  console.log('Reached function callApi');
+function getAllPlaylists() {
+  console.log('Reached function getAllPlaylists');
   window.location.href = 'http://localhost:8080/playlists';
 }
 
@@ -28,8 +26,8 @@ function handleRedirect() {
 
   console.log('GRABBED ACCESSTOKEN: ', accessToken);
   console.log('GRABBED REFRESHTOKEN: ', refreshToken);
-  localStorage.setItem('access_token', accessToken);
-  localStorage.setItem('refresh_token', refreshToken);
+  sessionStorage.setItem('access_token', accessToken);
+  sessionStorage.setItem('refresh_token', refreshToken);
 
   fetch('/onePlaylist')
     .then(result => result.json())
@@ -37,16 +35,26 @@ function handleRedirect() {
       console.log('RESULT', result);
       console.log('SONGART', result.songArt);
       let songArt = result.songArt;
-      displayArt(songArt);
+      let songLinks = result.songLinks
+      sessionStorage.setItem('playlistName', result.playlistName)
+      storeDisplayArt(songArt);
+      storeSongLinks(songLinks);
     })
   console.log('FETCH DONE');
 }
 
-function displayArt(songArt) {
-  console.log('displayArt reached!');
+function storeDisplayArt(songArt) {
+  console.log('storeDisplayArt reached!');
   let arrSongArt = Object.entries(songArt);
   console.log(arrSongArt);
-  localStorage.setItem('songArt', JSON.stringify(arrSongArt));
+  sessionStorage.setItem('songArt', JSON.stringify(arrSongArt));
+}
+
+function storeSongLinks(songLinks) {
+  console.log('storeSongLinks reached!');
+  let arrSongLinks = Object.entries(songLinks);
+  console.log(arrSongLinks);
+  sessionStorage.setItem('songLinks', JSON.stringify(arrSongLinks));
 }
 
 function getTokens() {
@@ -70,33 +78,28 @@ function reset() {
       ['', '', ''],
       ['', '', ''],
     ],
-    turn: 'Playlist',
-    winner: undefined,
-    gameList: gameStore,
+    playlist: sessionStorage.getItem('playlistName')
   };
 }
 
-function checkWin(rows) {
-  // check condition??
-  const combos = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-  ];
+function fetchAllPlaylists() {
+  console.log('Reached fetchAllPlaylists!');
+  fetch('/playlists')
+    .then(result => result.json())
+    .then(result => result.playlistNames)
+    .then(result => {
+      console.log('PLAYLISTNAMES', result);
+      addPlaylist(result);
+    })
+}
 
-  const flattened = rows.reduce((acc, row) => acc.concat(row), []);
-
-  //returns boolean
-  return combos.find(combo => (
-    flattened[combo[0]] !== '' &&
-    flattened[combo[0]] === flattened[combo[1]] &&
-    flattened[combo[1]] === flattened[combo[2]]
-  ));
+function addPlaylist(playlists) {
+  for (let key in playlists) {
+    let node = document.createElement('option');
+    node.value = playlists[key];
+    node.innerHTML = key;
+    document.getElementById('playlists').appendChild(node);
+  }
 }
 
 class App extends Component {
@@ -111,49 +114,46 @@ class App extends Component {
       handleRedirect();
     }
   }
-  handleClick(row, square) {
+  handleClick(songUrl) {
     // handles click on board
-    let { turn, winner } = this.state;
-    const { rows } = this.state;
-    const squareInQuestion = rows[row][square];
-
-    if (this.state.winner) return;
-    if (squareInQuestion) return;
-
-    rows[row][square] = turn;
-    turn = turn === 'X' ? 'O' : 'X';
-    winner = checkWin(rows);
-
-    // changes state of board
-    this.setState({
-      rows,
-      turn,
-      winner,
-    });
+    window.open(songUrl, '_blank').focus();
   }
 
   render() {
-    const { rows, turn, winner, gameList } = this.state;
+    const { rows, playlist, winner, gameList } = this.state;
     const handleClick = this.handleClick;
 
-    const songArt = JSON.parse(localStorage.getItem('songArt'));
+    let songArt = JSON.parse(sessionStorage.getItem('songArt'));
+    let songLinks = JSON.parse(sessionStorage.getItem('songLinks'));
 
+    console.log('SONGART', songArt);
+    console.log('SONGLINKS', songLinks);
 
+    if (!songArt) songArt =['','','','','','','','',''];
+    if (!songLinks) songLinks =['','','','','','','','',''];
+    
     const rowElements = rows.map((letters, i) => (
-      <Row key={i} row={i} letters={letters} handleClick={handleClick} artUrl={[songArt[i*3][1], songArt[i*3 + 1][1], songArt[i*3 + 2][1],]} />
+      <Row 
+      key={i} row={i} letters={letters} handleClick={handleClick} 
+      artUrl={[songArt[i*3][1], songArt[i*3 + 1][1], songArt[i*3 + 2][1],]} 
+      songUrl={[songLinks[i*3][1], songLinks[i*3 + 1][1], songLinks[i*3 + 2][1],]} 
+      />
     ));
 
-    let infoDiv;
-    if (winner) {
-      let winTurn = turn === 'X' ? 'O' : 'X';
-      infoDiv = (
-        <div>
-          <div>Player {winTurn} wins with squares {winner.join(', ')}!</div>
+    let infoDiv = (<div>
+      <div id="playlistSection" className="row">
+        <div className="col">
+          <div className="mb-3">
+            <label htmlFor="playlists" className="form-label">Choose a Playlist:</label>
+            <select id="playlists" className="form-control"></select>
+            <input className="btn-primary" type="button" onClick={fetchAllPlaylists()} value="Refresh Playlists"/>
+          </div>
         </div>
-      );
-    } else {
-      infoDiv = <div>Playlist: {turn}</div>;
-    }
+      </div>
+      <br/>
+      <br/>
+      Current Playlist: {playlist}
+    </div>);
 
     return (
       <div>
@@ -163,7 +163,7 @@ class App extends Component {
         </div>
         <button id="reset" onClick={() => this.setState(reset())}>Reset</button>
         <button id="oauth" onClick={() => getAuth()}>Spotify OAuth!</button>
-        <button id="playlists" onClick={() => callApi()}>Get Playlists!</button>
+        <button id="playlists" onClick={() => getAllPlaylists()}>Get Playlists!</button>
         <button id="oneplaylist" onClick={() => onePlaylist()}>Get Data on One Playlist!</button>
         <button id="topTracks" onClick={() => topTracks()}>Get Data on my Top Tracks!</button>
       </div>

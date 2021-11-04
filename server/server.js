@@ -153,25 +153,20 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-app.get('/playlists', async(req, res, next) => {
+app.get('/playlists', async(req, res) => {
   try {
+    console.log('REACHED PLAYLISTS ROUTE');
     let result = await spotifyApi.getUserPlaylists();
-    //
-    return next();
-    console.log('BODY', result.body);
-    res.status(200).send(result.body);
-  } catch (err) {
-    res.status(400).send(err);
-  }
-})
-
-app.get('/playlists', async(req, res, next) => {
-  try {
-    console.log('HERE');
-    res.locals.test = 'TEST';
-    await window.localStorage.setItem('test', 'value');
-    console.log('HERE2');
-    res.status(200).json({'SECOND': 'works'});
+    // console.log('BODY', result.body);
+    const playlistNames = {};
+    for (let elem of result.body.items) {
+      playlistNames[elem.name] = elem.id
+    }
+    const myObj = {
+      playlistNames: playlistNames,
+      response: result.body
+    }
+    return res.status(200).json(myObj);
   } catch (err) {
     res.status(400).send(err);
   }
@@ -194,6 +189,7 @@ app.get('/onePlaylist', async(req, res) => {
     const songNames = [];
     const songIds = {};
     const songPopularity = {};
+    const songLinks = {};
 
     for (let song of songs) {
       songNames.push(song.track.name);
@@ -211,20 +207,16 @@ app.get('/onePlaylist', async(req, res) => {
       for (let song of songs) {
         if (song.track.id === key) {
           songArt[songIds[key]] = song.track.album.images[1].url;
+          songLinks[songIds[key]] = song.track.external_urls.spotify;
         }
       }
     }
-    res.locals.onePlaylist = {
-      sortedSongs: sortedSongs,
-      sortedByPopularity: sortedByPopularity,
-      songArt: songArt,
-      response: result.body
-    }
     const myObj = {
-      playlistName: result.name,
+      playlistName: result.body.name,
       sortedSongs: sortedSongs,
       sortedByPopularity: sortedByPopularity,
       songArt: songArt,
+      songLinks: songLinks,
       response: result.body
     };
     // how to fetch data from backend to React

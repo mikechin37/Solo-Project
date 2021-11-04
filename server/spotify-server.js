@@ -4,9 +4,9 @@
  var querystring = require('querystring');
  var cookieParser = require('cookie-parser');
  
- var client_id = 'CLIENT_ID'; // Your client id
- var client_secret = 'CLIENT_SECRET'; // Your secret
- var redirect_uri = 'REDIRECT_URI'; // Your redirect uri
+ var client_id = '5356996e785f460699c8ed4c018ba20c'; // Your client id
+ var client_secret = '4e26d125ead54020952777d45cb99594'; // Your secret
+ var redirect_uri = 'http://localhost:8080/callback'; // Your redirect uri
  
  /**
   * Generates a random string containing numbers and letters
@@ -135,5 +135,5 @@
    });
  });
  
- console.log('Listening on 8888');
- app.listen(8888);
+ console.log('Listening on 3000 from spotify-server');
+ app.listen(3000);

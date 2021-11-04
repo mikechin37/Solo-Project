@@ -57,7 +57,20 @@ module.exports = {
       '/getAccessToken': {
         target: 'http://localhost:3000',
         secure: false,
-      }
+      },
+      '/login': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+      '/callback': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+      '/refresh_token': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+
     }
   }
   

@@ -3,12 +3,15 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+var request = require('request'); // "Request" library
+let XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 // let localStorage = window.localStorage;
 
 
-const clientID = '5356996e785f460699c8ed4c018ba20c';
-const clientSecret ='4e26d125ead54020952777d45cb99594';
+const client_ID = '5356996e785f460699c8ed4c018ba20c';
+const client_secret ='4e26d125ead54020952777d45cb99594';
 const redirect_uri = 'http://localhost:8080/';
+const TOKEN = 'https://acounts.spotify.com/api/token';
 
 app.use(cors());
 app.use(cookieParser());
@@ -22,7 +25,7 @@ app.get('/redirectSpotify', (req, res) => {
   console.log('redirectSpotify route reached');
 
   let authorizeUrl = 'https://accounts.spotify.com/authorize';
-  authorizeUrl += `?client_id=${clientID}`
+  authorizeUrl += `?client_id=${client_ID}`
   authorizeUrl += '&response_type=code'
   authorizeUrl += `&redirect_uri=${encodeURI(redirect_uri)}`
   authorizeUrl += '&show_dialog=true'
@@ -46,10 +49,32 @@ app.get('/getAccessToken', (req, res) => {
   let body = 'grant-type=authorization_code';
   body += `&code=${code}`;
   body += `&redirect_uri=${encodeURI(redirect_uri)}`;
-  body += `&client_id=${clientID}`;
-  body += `&client_secret=${clientSecret}`;
-  // res.redirect(307, body);
-})
+  body += `&client_id=${client_ID}`;
+  body += `&client_secret=${client_secret}`;
+  let xhr = new XMLHttpRequest();
+  xhr.open('POST', TOKEN, true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.setRequestHeader('Authorization', 'Basic' + btoa(`${client_ID}:${client_secret}`));
+  xhr.send(body);
+  xhr.onload = handleAuthorizationResponse;
+
+  function handleAuthorizationResponse() {
+    if (this.status == 200) {
+      let data = JSON.parse(this.responseText);
+      console.log('DATA', data);
+      if (data.access_token != undefined) {
+        access_token = data.access_token;
+        localStorage.setItem('access_token', access_token);
+      }
+      if (data.refresh_token != undefined) {
+        refresh_token = data.refresh_token;
+        localStorage.setItem('refresh_token', refresh_token);
+      }
+    } else {
+      console.log('ERROR in handleAuthorizationResponse', this.reponseText);
+    }
+  }
+});
 
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the build folder on the route '/build'

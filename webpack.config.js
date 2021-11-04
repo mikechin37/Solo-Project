@@ -42,7 +42,19 @@ module.exports = {
       publicPath: '/'
     },
     proxy: {
+      '/': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
       '/api/leaders': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+      '/redirectSpotify': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+      '/getAccessToken': {
         target: 'http://localhost:3000',
         secure: false,
       }

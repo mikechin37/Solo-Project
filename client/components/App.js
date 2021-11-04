@@ -1,18 +1,33 @@
 import React, { Component } from 'react';
 import Row from './Row';
-import Leaders from './Leaders';
+let localStorage = window.localStorage;
 
 let gameStore = [];
 
 function getAuth() {
-  // make this into Spotify Auth
-  const clientID = '5356996e785f460699c8ed4c018ba20c';
-  const clientSecret ='4e26d125ead54020952777d45cb99594';
+  console.log('Reached function getAuth')
+  window.location.href = 'http://localhost:8080/redirectSpotify';
+}
 
-  const redirect_uri = 'http://localhost:8080/';
-  const AUTHORIZE = 'https://accounts.spotify.com/authorize';
-  
-  console.log('Auth Success!');
+function handleRedirect() {
+  console.log('Reached handleRedirect')
+  let code = getCode();
+  // localStorage.setItem('code', code);
+  fetchAccessToken(code);
+}
+
+function fetchAccessToken(code) {
+  window.location.href = `http://localhost:8080/getAccessToken?code=${code}`;
+}
+
+function getCode() {
+  const queryString = window.location.search;
+  let code = null;
+  if (queryString.length > 0) {
+    code = new URLSearchParams(queryString).get('code');
+    console.log('GRABBED CODE!', code)
+  }
+  return code;
 }
 
 function reset() {
@@ -58,7 +73,11 @@ class App extends Component {
     // this will start the reset method at the moment of load!! problem
     this.state = reset();
   }
-  
+  componentDidMount() {
+    if (window.location.search.length > 0) {
+      handleRedirect();
+    }
+  }
   handleClick(row, square) {
     // handles click on board
     let { turn, winner } = this.state;
@@ -109,7 +128,7 @@ class App extends Component {
         </div>
         <button id="reset" onClick={() => this.setState(reset())}>Reset</button>
         <button id="oauth" onClick={() => getAuth()}>Spotify OAuth!</button>
-        <Leaders />
+        {/* <Leaders /> */}
       </div>
     );
   }

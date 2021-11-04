@@ -7,6 +7,7 @@ var request = require('request'); // "Request" library
 var querystring = require('querystring');
 var SpotifyWebApi = require('spotify-web-api-node');
 const apiRouter = express.Router();
+// let sessionStorage = window.sessionStorage;
 
 const client_id = '5356996e785f460699c8ed4c018ba20c';
 const client_secret ='4e26d125ead54020952777d45cb99594';
@@ -184,6 +185,8 @@ app.get('/', async(req, res, next) => {
 
 app.get('/onePlaylist', async(req, res) => {
   try {
+    // const playlistID = await sessionStorage.getItem('playlistID');
+    // console.log('ID', playlistID);
     let result = await spotifyApi.getPlaylist('233LBuxFduCQqIB5GiWS5d');
     let songs = result.body.tracks.items // -> array of objects (songs)
     const songNames = [];

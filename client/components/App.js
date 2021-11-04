@@ -36,7 +36,7 @@ function handleRedirect() {
       console.log('SONGART', result.songArt);
       let songArt = result.songArt;
       let songLinks = result.songLinks
-      sessionStorage.setItem('playlistName', result.playlistName)
+      // sessionStorage.setItem('playlistName', result.playlistName)
       storeDisplayArt(songArt);
       storeSongLinks(songLinks);
     })
@@ -82,6 +82,14 @@ function reset() {
   };
 }
 
+function selectPlaylist() {
+  let e = document.getElementById('playlists');
+  const selectedPlaylist = e.options[e.selectedIndex].text;
+  const selectedPlaylistID = e.options[e.selectedIndex].value;
+  sessionStorage.setItem('playlistName', selectedPlaylist);
+  sessionStorage.setItem('playlistID', selectedPlaylistID)
+}
+
 function fetchAllPlaylists() {
   console.log('Reached fetchAllPlaylists!');
   fetch('/playlists')
@@ -92,6 +100,7 @@ function fetchAllPlaylists() {
       addPlaylist(result);
     })
 }
+
 
 function addPlaylist(playlists) {
   for (let key in playlists) {
@@ -146,7 +155,8 @@ class App extends Component {
           <div className="mb-3">
             <label htmlFor="playlists" className="form-label">Choose a Playlist:</label>
             <select id="playlists" className="form-control"></select>
-            <input className="btn-primary" type="button" onClick={fetchAllPlaylists()} value="Refresh Playlists"/>
+            <input className="btn-primary" type="button" onClick={() => selectPlaylist()} value="Select Playlist"/>
+            <input className="btn-primary" type="button" onClick={() => fetchAllPlaylists()} value="Refresh all Playlists"/>
           </div>
         </div>
       </div>

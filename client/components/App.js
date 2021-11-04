@@ -11,7 +11,15 @@ function getAuth() {
 
 function callApi() {
   console.log('Reached function callApi');
-  window.location.href = 'http://localhost:8080/api';
+  window.location.href = 'http://localhost:8080/playlists';
+}
+
+function onePlaylist() {
+  window.location.href = 'http://localhost:8080/onePlaylist';
+}
+
+function topTracks() {
+  window.location.href = 'http://localhost:8080/usersTopTracks';
 }
 
 function handleRedirect() {
@@ -137,7 +145,9 @@ class App extends Component {
         </div>
         <button id="reset" onClick={() => this.setState(reset())}>Reset</button>
         <button id="oauth" onClick={() => getAuth()}>Spotify OAuth!</button>
-        <button id="api" onClick={() => callApi()}>Call API!</button>
+        <button id="playlists" onClick={() => callApi()}>Get Playlists!</button>
+        <button id="oneplaylist" onClick={() => onePlaylist()}>Get Data on One Playlist!</button>
+        <button id="topTracks" onClick={() => topTracks()}>Get Data on my Top Tracks!</button>
         {/* <Leaders /> */}
       </div>
     );

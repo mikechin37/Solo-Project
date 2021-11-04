@@ -5,12 +5,18 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 var request = require('request'); // "Request" library
 var querystring = require('querystring');
-let XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+var SpotifyWebApi = require('spotify-web-api-node');
 
 const client_id = '5356996e785f460699c8ed4c018ba20c';
 const client_secret ='4e26d125ead54020952777d45cb99594';
 const redirect_uri = 'http://localhost:8080/callback';
 const TOKEN = 'https://acounts.spotify.com/api/token';
+
+let spotifyApi = new SpotifyWebApi({
+  clientId: client_id,
+  clientSecret: client_secret,
+  redirectUri: redirect_uri,
+});
 
 //  app.use(express.static(__dirname + '/public'))
 app.use(cors());
@@ -103,6 +109,9 @@ app.get('/callback', function(req, res) {
         res.cookie('access_token', access_token);
         res.cookie('refresh_token', refresh_token);
 
+        spotifyApi.setAccessToken(access_token);
+        spotifyApi.setRefreshToken(refresh_token);
+
         // we can also pass the token to the browser to make requests from there
         res.redirect('/?' +
           querystring.stringify({
@@ -143,26 +152,55 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-app.get('/api', getDevices, (req, res) => {
-  console.log('Reached final api callback')
-  console.log('RES BODY', res.body);
-  return res.status(200).json(res.body);
+app.get('/playlists', async(req, res) => {
+  try {
+    let result = await spotifyApi.getUserPlaylists();
+    console.log('BODY', result.body);
+    res.status(200).send(result.body);
+  } catch (err) {
+    res.status(400).send(err);
+  }
 })
 
-function getDevices(req, res, next) {
-  console.log('Reached getDevices');
-  const DEVICES = 'https://api.spotify.com/v1/me/player/devices';
-  const access_token = req.cookies.access_token;
-  // req.headers['Content-Type'] = 'application/json';
-  // console.log(`Bearer ${access_token}`);
-  // req.headers.authorization = `Bearer ${access_token}`;
-  // req.headers['Authorization'] = `Bearer ${access_token}`;
-  // res.setHeader('Content-Type', 'application/json');
-  // res.setHeader('Authorization', `Bearer ${access_token}`);
-  res.header('Authorization', `Bearer ${access_token}`);
-  res.header('Content-Type', 'application/json');
-  res.redirect(DEVICES)
-}
+app.get('/onePlaylist', async(req, res) => {
+  try {
+    let result = await spotifyApi.getPlaylist('233LBuxFduCQqIB5GiWS5d');
+    let songs = result.body.tracks.items // -> array of objects (songs)
+    const songNames = [];
+    const songIds = {};
+    const songPopularity = {};
+
+    for (let song of songs) {
+      songNames.push(song.track.name);
+      songIds[song.track.name] = song.track.id;
+      songPopularity[song.track.id] = song.track.popularity
+    }
+    res.status(200).json({
+      songIds: songIds,
+      songPopularity: songPopularity
+    })
+
+  } catch (err) {
+    res.status(400).send(err);
+  }
+})
+
+app.get('/usersTopTracks', async(req, res) => {
+  try {
+    let result = await spotifyApi.getMyTopTracks();
+    console.log('BODY', result.body);
+    const songs = {};
+    for (let item of result.body.items) {
+      songs[item.artists[0].name] = item.name;
+    }
+    res.status(200).json({
+      topSongs: songs,
+      result: result.body
+    });
+  } catch (err) {
+    res.status(400).send(err);
+  }
+})
 
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the build folder on the route '/build'

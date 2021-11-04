@@ -5,26 +5,38 @@ let localStorage = window.localStorage;
 let gameStore = [];
 
 function getAuth() {
-  console.log('Reached function getAuth')
+  console.log('Reached function getAuth');
   window.location.href = 'http://localhost:8080/login';
 }
 
-function fetchAccessToken(code) {
-  window.location.href = `http://localhost:8080/getAccessToken?code=${code}`;
+function callApi() {
+  console.log('Reached function callApi');
+  window.location.href = 'http://localhost:8080/api';
 }
 
-function getAccessToken() {
+function handleRedirect() {
+  const accessToken = getTokens().accessToken;
+  const refreshToken = getTokens().refreshToken;
+
+  console.log('GRABBED ACCESSTOKEN: ', accessToken);
+  console.log('GRABBED REFRESHTOKEN: ', refreshToken);
+  localStorage.setItem('access_token', accessToken);
+  localStorage.setItem('refresh_token', refreshToken);
+
+}
+
+function getTokens() {
   const queryString = window.location.search;
   let accessToken = null;
   let refreshToken = null;
   if (queryString.length > 0) {
     accessToken = new URLSearchParams(queryString).get('access_token');
     refreshToken = new URLSearchParams(queryString).get('refresh_token');
-
-    console.log('GRABBED ACCESSTOKEN: ', accessToken);
-    console.log('GRABBED REFRESHTOKEN: ', refreshToken);
   }
-  return accessToken;
+  return {
+    accessToken: accessToken,
+    refreshToken: refreshToken
+  }
 }
 
 function reset() {
@@ -72,7 +84,7 @@ class App extends Component {
   }
   componentDidMount() {
     if (window.location.search.length > 0) {
-      getAccessToken();
+      handleRedirect();
     }
   }
   handleClick(row, square) {
@@ -125,6 +137,7 @@ class App extends Component {
         </div>
         <button id="reset" onClick={() => this.setState(reset())}>Reset</button>
         <button id="oauth" onClick={() => getAuth()}>Spotify OAuth!</button>
+        <button id="api" onClick={() => callApi()}>Call API!</button>
         {/* <Leaders /> */}
       </div>
     );

@@ -6,8 +6,6 @@ const cookieParser = require('cookie-parser');
 var request = require('request'); // "Request" library
 var querystring = require('querystring');
 let XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
-// let localStorage = window.localStorage;
-
 
 const client_id = '5356996e785f460699c8ed4c018ba20c';
 const client_secret ='4e26d125ead54020952777d45cb99594';
@@ -30,9 +28,7 @@ var generateRandomString = function(length) {
 
 var stateKey = 'spotify_auth_state';
 
-
 app.get('/login', function(req, res) {
-
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
 
@@ -104,6 +100,9 @@ app.get('/callback', function(req, res) {
           // console.log('BODY:', body);
         });
 
+        res.cookie('access_token', access_token);
+        res.cookie('refresh_token', refresh_token);
+
         // we can also pass the token to the browser to make requests from there
         res.redirect('/?' +
           querystring.stringify({
@@ -143,6 +142,27 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
+
+app.get('/api', getDevices, (req, res) => {
+  console.log('Reached final api callback')
+  console.log('RES BODY', res.body);
+  return res.status(200).json(res.body);
+})
+
+function getDevices(req, res, next) {
+  console.log('Reached getDevices');
+  const DEVICES = 'https://api.spotify.com/v1/me/player/devices';
+  const access_token = req.cookies.access_token;
+  // req.headers['Content-Type'] = 'application/json';
+  // console.log(`Bearer ${access_token}`);
+  // req.headers.authorization = `Bearer ${access_token}`;
+  // req.headers['Authorization'] = `Bearer ${access_token}`;
+  // res.setHeader('Content-Type', 'application/json');
+  // res.setHeader('Authorization', `Bearer ${access_token}`);
+  res.header('Authorization', `Bearer ${access_token}`);
+  res.header('Content-Type', 'application/json');
+  res.redirect(DEVICES)
+}
 
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the build folder on the route '/build'
